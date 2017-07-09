@@ -17,6 +17,9 @@ function _Logger() {
   then
     LOG_LEVEL=${_LOG_LEVEL[INFO]}
   fi
+  local clogfilename="`basename $0`"
+  #echo ${clogfilename%%.*}
+  exec 1> ${1}/../logs/${clogfilename%%.*}.log
 }
 
 function _log_impl() {
@@ -34,6 +37,6 @@ function __PUTLOG() {
   _log_impl ${LOG_LEVEL} ${ARG_LEVEL} "${@}"
 }
 
-_Logger
+_Logger "${1}"
 
 __PUTLOG INFO Start.

@@ -5,8 +5,24 @@ function __ExecMain() {
  local cSHNAME="${1}"
  shift
  local cOPTIONS="${@}"
- __PUTLOG DEBUG "`pwd`"
- __PUTLOG DEBUG "${cSHNAME}"
- source ${cSHNAME} ${cOPTIONS}
+
+ local cDEF_CMD_PATH_BIN="/bin"
+ local cDEF_CMD_SOURCE="source"
+ local cDEF_CMD_SH="sh"
+ local cCMD_EXECUTE=""
+
+ __PUTLOG DEBUG "PWD [ `pwd` ]"
+ __PUTLOG DEBUG "EXEC SHELLNAME [ ${cSHNAME} ]"
+ __PUTLOG DEBUG "EXEC OPTIONS [ ${cOPTIONS} ]"
+ __PUTLOG DEBUG "EXECUT MODE [ ${_EXECUTMODE} ]"
+
+ test "${_EXECUTMODE}" = "${cDEF_CMD_SOURCE}" && cCMD_EXECUTE="${cDEF_CMD_SOURCE}"
+
+ test "${_EXECUTMODE}" = "${cDEF_CMD_SH}" && cCMD_EXECUTE="${cDEF_CMD_PATH_BIN}/${cDEF_CMD_SH}"
+
+ __PUTLOG DEBUG "EXECUT COMMAND [ ${cCMD_EXECUTE} ]"
+ test "${cCMD_EXECUTE}" = "" && $(__PUTLOG ERROR "syntax error. IDSettings File is Bad!";exit 1)
+
+ ${cCMD_EXECUTE} ${cSHNAME} ${cOPTIONS}
 
 }

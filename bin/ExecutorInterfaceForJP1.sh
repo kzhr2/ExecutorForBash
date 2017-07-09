@@ -7,13 +7,15 @@ source ${_cScriptDir}/CoreExecutor.sh ${_cScriptDir}
 
 function _getShell() {
 
-local cID=""
-eval cID='$'${IDNAME}
+ local cID=""
+ eval cID='$'${IDNAME}
 
-source ${_cScriptDir}/../settings/IDSettings_${cID}.conf
+ test "${cID}" = "" && __PUTLOG ERROR "Environment variable [ ${IDNAME} ] is empty. " && exit 1
 
-__PUTLOG DEBUG "ShellNAME [ ${_SHELLNAME} ]"
-__PUTLOG DEBUG "Options [ ${_OPTIONS} ]"
+ source ${_cScriptDir}/../settings/IDSettings_${cID}.conf
+
+ __PUTLOG DEBUG "ShellNAME [ ${_SHELLNAME} ]"
+ __PUTLOG DEBUG "Options [ ${_OPTIONS} ]"
 
 }
 
