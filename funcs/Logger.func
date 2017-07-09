@@ -9,6 +9,10 @@ _LOG_LEVEL[ERROR]=50
 
 # Init LOG_LEVEL
 function _Logger() {
+
+  local clogfilename="`basename $0`"
+  local cCurrentPath="${1}"
+
   if [ "${LOG_LEVEL}" != "" ];
   then
     LOG_LEVEL=${_LOG_LEVEL[${LOG_LEVEL}]}
@@ -17,9 +21,9 @@ function _Logger() {
   then
     LOG_LEVEL=${_LOG_LEVEL[INFO]}
   fi
-  local clogfilename="`basename $0`"
+
   #echo ${clogfilename%%.*}
-  exec 1> ${1}/../logs/${clogfilename%%.*}.log
+  exec 1> ${cCurrentPath}/../logs/${clogfilename%%.*}.log
 }
 
 function _log_impl() {
