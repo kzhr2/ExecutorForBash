@@ -1,0 +1,12 @@
+#! /bin/bash -ue
+
+function __ExecMain() {
+
+ local cSHNAME="${1}"
+ shift
+ local cOPTIONS="${@}"
+ __PUTLOG DEBUG "`pwd`"
+ __PUTLOG DEBUG "${cSHNAME}"
+ source ${cSHNAME} ${cOPTIONS}
+
+}

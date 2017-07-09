@@ -1,0 +1,63 @@
+#! /bin/bash -ue
+
+function __stacktrace() {
+    local mess max i line src
+
+    mess=${1}
+    let max=${#BASH_LINENO[@]}-1
+
+    line=${BASH_LINENO[0]}
+    src=${BASH_SOURCE[1]}
+    __PUTLOG INFO "${mess} at ${src} line ${line}"
+
+    i=1
+    while [ ${i} -lt ${max} ]; do
+        line=${BASH_LINENO[${i}]}
+        src=${BASH_SOURCE[`expr ${i} + 1`]}
+        __PUTLOG INFO "	${FUNCNAME[${i}]}() called at ${src} line ${line}"
+        let i=${i}+1
+    done
+}
+
+function __ERRORTER() {
+
+ local cPS_auxl_PID=`ps auxl ${$} | grep ${$} | grep -E "[^grep]"`
+ local cPS_auxl_PPID=`ps auxl ${PPID} | grep ${PPID} | grep -E "[^grep]"`
+
+ __PUTLOG INFO "shellName [ ${0} ]"
+ __PUTLOG INFO "PID [ ${$} ]"
+ __PUTLOG INFO "PS [ ${cPS_auxl_PID} ]"
+ __PUTLOG INFO "PPID [ ${PPID} ]"
+ __PUTLOG INFO "PS [ ${cPS_auxl_PPID} ]" 
+ __PUTLOG INFO "ERRORCODE [ ${1} ]"
+ __PUTLOG INFO "LINENO [ ${2} ]"
+ __PUTLOG INFO "PWD [ ${3} ]"
+ __PUTLOG INFO "ERRORMESSAGE [ `cat ${tmpfile}` ]"
+ __PUTLOG ERROR "ERRORMESSAGE [ `cat ${tmpfile}` ]"
+}
+
+__ATEXIT() {
+ [[ -n ${tmpfile} ]] && /bin/rm -f "${tmpfile}"
+}
+
+function __EXIT() {
+ 
+ local iERRORCODE=${1}
+ local iLINENO="${2}"
+ local cPWD="${3}"
+
+ __PUTLOG DEBUG "ERRORCODE [ ${iERRORCODE} ]"
+ if [ "_${iERRORCODE}" != "_0" ]; then
+   __ERRORTER "${iERRORCODE}" "${iLINENO}" "${cPWD}"
+   __stacktrace "Error occurred" 
+ fi
+ __PUTLOG DEBUG "ERRORMESSAGE [ `cat ${tmpfile}` ]"
+ __PUTLOG INFO End.
+
+}
+
+tmpfile=`mktemp`
+exec 2> ${tmpfile}
+
+trap '__EXIT ${?} ${LINENO} `pwd`; __ATEXIT;' EXIT
+

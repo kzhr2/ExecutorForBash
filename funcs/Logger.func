@@ -1,0 +1,39 @@
+#! /bin/bash
+
+# Set LOG_LEVEL
+declare -A _LOG_LEVEL
+_LOG_LEVEL[DEBUG]=10
+_LOG_LEVEL[INFO]=30
+_LOG_LEVEL[WARN]=40
+_LOG_LEVEL[ERROR]=50
+
+# Init LOG_LEVEL
+function _Logger() {
+  if [ "${LOG_LEVEL}" != "" ];
+  then
+    LOG_LEVEL=${_LOG_LEVEL[${LOG_LEVEL}]}
+  fi
+  if [ "${LOG_LEVEL}" = "" ];
+  then
+    LOG_LEVEL=${_LOG_LEVEL[INFO]}
+  fi
+}
+
+function _log_impl() {
+  local target=${1};shift;
+  local level=${1};shift;
+  if [ ${_LOG_LEVEL[${level}]} -ge ${target} ];
+  then
+    printf "$(date +'%Y/%m/%d %T') %-5s ${$} ${@}\n" ${level}
+  fi
+}
+
+function __PUTLOG() {
+  local ARG_LEVEL="${1}"
+  shift
+  _log_impl ${LOG_LEVEL} ${ARG_LEVEL} "${@}"
+}
+
+_Logger
+
+__PUTLOG INFO Start.
