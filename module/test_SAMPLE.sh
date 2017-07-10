@@ -18,4 +18,3 @@ echo ${shell} is end
 }
 
 main ${1}
-

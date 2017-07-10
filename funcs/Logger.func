@@ -10,8 +10,11 @@ _LOG_LEVEL[ERROR]=50
 # Init LOG_LEVEL
 function _Logger() {
 
-  local clogfilename="`basename $0`"
+  local cLogFileName_base="`basename $0`"
+  local cLogFileName="${cLogFileName_base%%.*}.log"
   local cCurrentPath="${1}"
+
+  source ${cCurrentPath}/../conf/Logger.conf
 
   if [ "${LOG_LEVEL}" != "" ];
   then
@@ -22,8 +25,18 @@ function _Logger() {
     LOG_LEVEL=${_LOG_LEVEL[INFO]}
   fi
 
-  #echo ${clogfilename%%.*}
-  exec 1> ${cCurrentPath}/../logs/${clogfilename%%.*}.log
+  #logDirectory
+  if [ "${_CONF_logDirPath}" = "" ] ; then
+    exec 1>> ${cCurrentPath}/../logs/${cLogFileName}
+    __PUTLOG DEBUG "_CONF_logDirPath [ ${_CONF_logDirPath} ] A"
+  elif ! [ -e "${_CONF_logDirPath}" ]; then
+    #statements
+    exec 1>> ${cCurrentPath}/../logs/${cLogFileName}
+    __PUTLOG DEBUG "_CONF_logDirPath [ ${_CONF_logDirPath} ] B"
+  else
+    exec 1>> ${_CONF_logDirPath}/${cLogFileName}
+    __PUTLOG DEBUG "_CONF_logDirPath [ ${_CONF_logDirPath} ] C"
+  fi
 }
 
 function _log_impl() {

@@ -1,22 +1,19 @@
 #! /bin/bash -ue
 
 function __stacktrace() {
-    local mess max i line src
+ local mess frame index
 
-    mess=${1}
-    let max=${#BASH_LINENO[@]}-1
+ mess=${1}
 
-    line=${BASH_LINENO[0]}
-    src=${BASH_SOURCE[1]}
-    __PUTLOG INFO "${mess} at ${src} line ${line}"
+ frame=($(caller "1"))
+ __PUTLOG INFO  "${mess} at function ${frame[1]} (${frame[2]}:${frame[0]})"
 
-    i=1
-    while [ ${i} -lt ${max} ]; do
-        line=${BASH_LINENO[${i}]}
-        src=${BASH_SOURCE[`expr ${i} + 1`]}
-        __PUTLOG INFO "	${FUNCNAME[${i}]}() called at ${src} line ${line}"
-        let i=${i}+1
-    done
+ index=2
+ while frame=($(caller "${index}")); do
+  ((index++))
+  # at function <function name> (<file name>:<line no>)
+  __PUTLOG INFO  "at function ${frame[1]} (${frame[2]}:${frame[0]})"
+ done
 }
 
 function __ERRORTER() {
@@ -29,10 +26,9 @@ function __ERRORTER() {
  __PUTLOG INFO "PS [ ${cPS_auxl_PID} ]"
  __PUTLOG INFO "PPID [ ${PPID} ]"
  __PUTLOG INFO "PS [ ${cPS_auxl_PPID} ]"
- __PUTLOG INFO "ERRORCODE [ ${1} ]"
- __PUTLOG INFO "LINENO [ ${2} ]"
  __PUTLOG INFO "PWD [ ${3} ]"
- __PUTLOG INFO "ERRORMESSAGE [ `cat ${tmpfile}` ]"
+ __PUTLOG INFO "BASHSOURCE [ ${2} ]"
+ __PUTLOG INFO "ERRORCODE [ ${1} ]"
  __PUTLOG ERROR "ERRORMESSAGE [ `cat ${tmpfile}` ]"
 }
 
@@ -43,12 +39,12 @@ __ATEXIT() {
 function __EXIT() {
 
  local iERRORCODE=${1}
- local iLINENO="${2}"
+ local cBASHSOURCE="${2}"
  local cPWD="${3}"
 
  __PUTLOG DEBUG "ERRORCODE [ ${iERRORCODE} ]"
  if [ "_${iERRORCODE}" != "_0" ]; then
-   __ERRORTER "${iERRORCODE}" "${iLINENO}" "${cPWD}"
+   __ERRORTER "${iERRORCODE}" "${cBASHSOURCE}" "${cPWD}"
    __stacktrace "Error occurred"
  fi
  __PUTLOG DEBUG "ERRORMESSAGE [ `cat ${tmpfile}` ]"
@@ -59,5 +55,5 @@ function __EXIT() {
 tmpfile=`mktemp`
 exec 2> ${tmpfile}
 
-trap 'exit ${?};' ERR
-trap '__EXIT ${?} ${LINENO} `pwd`; __ATEXIT;' EXIT
+trap 'returncodeForERR=${?}; __EXIT ${returncodeForERR} ${BASH_SOURCE[0]} `pwd`; exit ${returncodeForERR};' ERR
+trap 'returncodeForEXIT=${?}; test "${returncodeForERR}" = "" && __EXIT ${returncodeForEXIT} ${BASH_SOURCE[0]} `pwd`; __ATEXIT;' EXIT
