@@ -18,8 +18,8 @@ function __stacktrace() {
 
 function __ERRORTER() {
 
- local cPS_auxl_PID=`ps auxl ${$} | grep ${$} | grep -E "[^grep]"`
- local cPS_auxl_PPID=`ps auxl ${PPID} | grep ${PPID} | grep -E "[^grep]"`
+ local cPS_auxl_PID=`ps aux ${$} | grep ${$} | grep -v "grep" | grep -v "aux"`
+ local cPS_auxl_PPID=`ps aux ${PPID} | grep ${PPID} | grep -v "grep" | grep -v "aux"`
 
  __PUTLOG INFO "shellName [ ${0} ]"
  __PUTLOG INFO "PID [ ${$} ]"
@@ -29,11 +29,12 @@ function __ERRORTER() {
  __PUTLOG INFO "PWD [ ${3} ]"
  __PUTLOG INFO "BASHSOURCE [ ${2} ]"
  __PUTLOG INFO "ERRORCODE [ ${1} ]"
- __PUTLOG ERROR "ERRORMESSAGE [ `cat ${tmpfile}` ]"
+ __PUTLOG ERROR "ERRORMESSAGE [ `cat ${_tmpfile_StandardOutput_Error}` ]"
 }
 
 __ATEXIT() {
- [[ -n ${tmpfile} ]] && /bin/rm -f "${tmpfile}"
+ __Export_ErrorLog ${1}
+ [[ -n ${_tmpfile_StandardOutput_Error} ]] && /bin/rm -f "${_tmpfile_StandardOutput_Error}"
 }
 
 function __EXIT() {
@@ -47,13 +48,10 @@ function __EXIT() {
    __ERRORTER "${iERRORCODE}" "${cBASHSOURCE}" "${cPWD}"
    __stacktrace "Error occurred"
  fi
- __PUTLOG DEBUG "ERRORMESSAGE [ `cat ${tmpfile}` ]"
- __PUTLOG INFO End.
+ __PUTLOG DEBUG "ERRORMESSAGE [ `cat ${_tmpfile_StandardOutput_Error}` ]"
+ __PUTLOG INFO "End [${$}]."
 
 }
 
-tmpfile=`mktemp`
-exec 2> ${tmpfile}
-
 trap 'returncodeForERR=${?}; __EXIT ${returncodeForERR} ${BASH_SOURCE[0]} `pwd`; exit ${returncodeForERR};' ERR
-trap 'returncodeForEXIT=${?}; test "${returncodeForERR}" = "" && __EXIT ${returncodeForEXIT} ${BASH_SOURCE[0]} `pwd`; __ATEXIT;' EXIT
+trap 'returncodeForEXIT=${?}; test "${returncodeForERR}" = "" && __EXIT ${returncodeForEXIT} ${BASH_SOURCE[0]} `pwd`; __ATEXIT ${_ID};' EXIT

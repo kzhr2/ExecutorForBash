@@ -7,15 +7,13 @@ _LOG_LEVEL[INFO]=30
 _LOG_LEVEL[WARN]=40
 _LOG_LEVEL[ERROR]=50
 
+_LOG_DIRECTORY=""
+
+# Set LOG Output Temporally File
+_tmpfile_StandardOutput_Error=`mktemp`
+
 # Init LOG_LEVEL
-function _Logger() {
-
-  local cLogFileName_base="`basename $0`"
-  local cLogFileName="${cLogFileName_base%%.*}.log"
-  local cCurrentPath="${1}"
-
-  source ${cCurrentPath}/../conf/Logger.conf
-
+function _Init_LOG_LEVEL() {
   if [ "${LOG_LEVEL}" != "" ];
   then
     LOG_LEVEL=${_LOG_LEVEL[${LOG_LEVEL}]}
@@ -24,22 +22,71 @@ function _Logger() {
   then
     LOG_LEVEL=${_LOG_LEVEL[INFO]}
   fi
+}
 
-  #logDirectory
+# Init LOG_DIRECTORY
+function _Init_LOG_DIRECTORY() {
+  #statements
+  __PUTLOG DEBUG "_CONF_logDirPath [ ${_CONF_logDirPath} ] "
   if [ "${_CONF_logDirPath}" = "" ] ; then
-    exec 1>> ${cCurrentPath}/../logs/${cLogFileName}
-    __PUTLOG DEBUG "_CONF_logDirPath [ ${_CONF_logDirPath} ] A"
+    _LOG_DIRECTORY="${cCurrentPath}/logs"
   elif ! [ -e "${_CONF_logDirPath}" ]; then
-    #statements
-    exec 1>> ${cCurrentPath}/../logs/${cLogFileName}
-    __PUTLOG DEBUG "_CONF_logDirPath [ ${_CONF_logDirPath} ] B"
+    _LOG_DIRECTORY="${cCurrentPath}/logs"
   else
-    exec 1>> ${_CONF_logDirPath}/${cLogFileName}
-    __PUTLOG DEBUG "_CONF_logDirPath [ ${_CONF_logDirPath} ] C"
+    _LOG_DIRECTORY="${_CONF_logDirPath}"
   fi
 }
 
-function _log_impl() {
+# Init LOG_FILE
+function __Init_LOG_FILE() {
+  #statements
+  local cFilenameID="${1}"
+
+  local _LogFileName_Trace="Trace_${cFilenameID}.log"
+
+  #set Trace log
+  exec 1>> ${_LOG_DIRECTORY}/${_LogFileName_Trace}
+
+}
+
+function __Export_ErrorLog() {
+  #statements
+  local cFilenameID="${1}"
+
+  local _LogFileName_Error="Error_${cFilenameID}.log"
+
+  cat ${_tmpfile_StandardOutput_Error} >> ${_LOG_DIRECTORY}/${_LogFileName_Error}
+}
+
+# START Error Logging
+function _StartLogging() {
+  #statements
+  #set Error log
+  exec 2>> ${_tmpfile_StandardOutput_Error}
+
+}
+
+#　Initial setting
+function _Logger_impl() {
+
+  # Current Directory Path
+  local cCurrentPath="${1}"
+
+  # Read configuration file
+  source ${cCurrentPath}/conf/Logger.conf
+
+  # Init LOG_LEVEL
+  _Init_LOG_LEVEL
+
+  # Init LOG_DIRECTORY
+  _Init_LOG_DIRECTORY
+
+  # START Error Logging
+  _StartLogging
+
+}
+
+function _MessageOutoput() {
   local target=${1};shift;
   local level=${1};shift;
   if [ ${_LOG_LEVEL[${level}]} -ge ${target} ];
@@ -51,9 +98,8 @@ function _log_impl() {
 function __PUTLOG() {
   local ARG_LEVEL="${1}"
   shift
-  _log_impl ${LOG_LEVEL} ${ARG_LEVEL} "${@}"
+  _MessageOutoput ${LOG_LEVEL} ${ARG_LEVEL} "${@}"
 }
 
-_Logger "${1}"
 
-__PUTLOG INFO Start.
+_Logger_impl "${1}"
