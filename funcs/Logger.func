@@ -35,6 +35,7 @@ function _Init_LOG_DIRECTORY() {
   else
     _LOG_DIRECTORY="${_CONF_logDirPath}"
   fi
+  __PUTLOG DEBUG "_LOG_DIRECTORY   [ ${_LOG_DIRECTORY} ] "
 }
 
 # Init LOG_FILE
