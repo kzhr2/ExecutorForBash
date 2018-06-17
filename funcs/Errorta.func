@@ -1,0 +1,57 @@
+#! /bin/bash -ue
+
+function __stacktrace() {
+ local mess frame index
+
+ mess=${1}
+
+ frame=($(caller "1"))
+ __PUTLOG INFO  "${mess} at function ${frame[1]} (${frame[2]}:${frame[0]})"
+
+ index=2
+ while frame=($(caller "${index}")); do
+  ((index++))
+  # at function <function name> (<file name>:<line no>)
+  __PUTLOG INFO  "at function ${frame[1]} (${frame[2]}:${frame[0]})"
+ done
+}
+
+function __ERRORTER() {
+
+ local cPS_auxl_PID=`ps aux ${$} | grep ${$} | grep -v "grep" | grep -v "aux"`
+ local cPS_auxl_PPID=`ps aux ${PPID} | grep ${PPID} | grep -v "grep" | grep -v "aux"`
+
+ __PUTLOG INFO "shellName [ ${0} ]"
+ __PUTLOG INFO "PID [ ${$} ]"
+ __PUTLOG INFO "PS [ ${cPS_auxl_PID} ]"
+ __PUTLOG INFO "PPID [ ${PPID} ]"
+ __PUTLOG INFO "PS [ ${cPS_auxl_PPID} ]"
+ __PUTLOG INFO "PWD [ ${3} ]"
+ __PUTLOG INFO "BASHSOURCE [ ${2} ]"
+ __PUTLOG INFO "ERRORCODE [ ${1} ]"
+ __PUTLOG ERROR "ERRORMESSAGE [ `cat ${_tmpfile_StandardOutput_Error}` ]"
+}
+
+__ATEXIT() {
+ __Export_ErrorLog ${1}
+ [[ -n ${_tmpfile_StandardOutput_Error} ]] && /bin/rm -f "${_tmpfile_StandardOutput_Error}"
+}
+
+function __EXIT() {
+
+ local iERRORCODE=${1}
+ local cBASHSOURCE="${2}"
+ local cPWD="${3}"
+
+ __PUTLOG DEBUG "ERRORCODE [ ${iERRORCODE} ]"
+ if [ "_${iERRORCODE}" != "_0" ]; then
+   __ERRORTER "${iERRORCODE}" "${cBASHSOURCE}" "${cPWD}"
+   __stacktrace "Error occurred"
+ fi
+ __PUTLOG DEBUG "ERRORMESSAGE [ `cat ${_tmpfile_StandardOutput_Error}` ]"
+ __PUTLOG INFO "End [${$}]."
+
+}
+
+trap 'returncodeForERR=${?}; __EXIT ${returncodeForERR} ${BASH_SOURCE[0]} `pwd`; exit ${returncodeForERR};' ERR
+trap 'returncodeForEXIT=${?}; test "${returncodeForERR}" = "" && __EXIT ${returncodeForEXIT} ${BASH_SOURCE[0]} `pwd`; __ATEXIT ${_ID};' EXIT
