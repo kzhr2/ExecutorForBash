@@ -9,6 +9,7 @@ function __ExecMain() {
  local cDEF_CMD_PATH_BIN="/bin"
  local cDEF_CMD_SOURCE="source"
  local cDEF_CMD_SH="sh"
+ local cDEF_CMD_JAVA="java"
  local cCMD_EXECUTE=""
 
  __PUTLOG DEBUG "PWD [ `pwd` ]"
@@ -19,6 +20,12 @@ function __ExecMain() {
  test "${_EXECUTMODE}" = "${cDEF_CMD_SOURCE}" && cCMD_EXECUTE="${cDEF_CMD_SOURCE}"
 
  test "${_EXECUTMODE}" = "${cDEF_CMD_SH}" && cCMD_EXECUTE="${cDEF_CMD_PATH_BIN}/${cDEF_CMD_SH}"
+
+ if [[ "${_EXECUTMODE}" = "${cDEF_CMD_JAVA}" ]]; then
+   #statements
+    test "${_cDEF_CMD_PATH_JAVA}" != "" && ls -l "${_cDEF_CMD_PATH_JAVA}/${cDEF_CMD_JAVA}"
+    cCMD_EXECUTE="${_cDEF_CMD_PATH_JAVA}${cDEF_CMD_JAVA}"
+ fi
 
  __PUTLOG DEBUG "EXECUT COMMAND [ ${cCMD_EXECUTE} ]"
  test "${cCMD_EXECUTE}" = "" && $(__PUTLOG ERROR "syntax error. IDSettings File is Bad!";exit 1)
