@@ -15,7 +15,7 @@ function _getProgram() {
 
  source ${_cScriptDir}/settings/${cSETTINGSFILEPATH}/Configuration_${ARGUMENT_PROGRAM_ID}.conf
 
-  if [[ -e "${_cScriptDir}/module/${_PROGRAM}" ]]; then
+  if [[ ! -e "${_cScriptDir}/module/${_PROGRAM}" ]]; then
     #statements
     echo "Program name is empty. [ ${_PROGRAM} ]" >&2 #ERRORMESSAGE
     exit 1
